@@ -3,6 +3,8 @@ package Editor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class ReadObjectsFile {
@@ -20,24 +22,19 @@ public class ReadObjectsFile {
 	public static int[][] readObjects(String file, int count) {
 		System.out.print("Читаем список объектов...");
 		int[][] objects = new int[200000][28];
-		ArrayList<Integer> buf = new ArrayList<Integer>();			
-		// Читаем файл побайтно в массив buf
-		try (FileInputStream fin = new FileInputStream(file)) {
-			int i = -1;
-			while ((i = fin.read()) != -1) {
-				buf.add(i);
+
+		try {
+			byte[] buf = Files.readAllBytes(Paths.get(file));
+			int n = 0;
+			for (int j = 0; j < count; j++) {
+				for (int k = 0; k < 28; k++) {
+					objects[j][k] = buf[n] & 0xff;
+					n++;
+				}
 			}
-		} catch (IOException ex) {
-			System.out.println(ex.getMessage());
-		}
-		// Разбираем массив на части
-		int n = 0;
-		for (int j = 0; j < count; j++) {
-			for (int k = 0; k < 28; k++) {
-				objects[j][k] = buf.get(n);
-				n++;
+		} catch (IOException z) {
+			z.printStackTrace();
 			}
-		}
 		System.out.println("OK");
 		return objects;
 	}

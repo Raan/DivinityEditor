@@ -7,14 +7,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Random;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.event.*;
 
@@ -22,7 +17,7 @@ public class Editor_007 extends JFrame {
 	public static int[][][] TileArray = new int[1024][512][136];
 	//--------------------Objects----------------------
 	public static String[] ObjectsName = new String[7208];
-	public static int[][] ObjectsInfo = new int[7208][132];
+	public static int[][] ObjectsInfo = new int[7208][7];// Размер и точка привязки объекта
 	public static int [][] numbOfObjects = new int[40][40];// Количество объектов на плитке
 	public static int numbOfObjectsAll = 0;
 	public static int [][] ObjectsAll = new int[24000][13];// Объекты
@@ -57,7 +52,7 @@ public class Editor_007 extends JFrame {
 	public static String inpFile = "F:\\SteamLibrary\\steamapps\\common\\divine_divinity\\savegames\\Test_10\\world.x0";
 	public static String outFile = "F:\\SteamLibrary\\steamapps\\common\\divine_divinity\\savegames\\Test_10\\world.x0";
 	public static String ObjFile = "F:\\SteamLibrary\\steamapps\\common\\divine_divinity\\savegames\\Test_10\\objects.x0";
-	public static String inpObjFile = "F:\\SteamLibrary\\steamapps\\common\\divine_divinity\\static\\objects.000";
+	public static String inpObjFile = "objects.de";
 	public static String consoleText = "";
 	public static String infoText = "info";
 	
@@ -98,9 +93,9 @@ public class Editor_007 extends JFrame {
 					for (int k = 0; k < TileArray[i][j][6]; k++) {
 						int numderObject = TileArray[i][j][k*8+22]*64 + TileArray[i][j][k*8+21]/4;
 						int objectBiasY = 0;
-						int objectBiasX = 0;;
-						objectBiasX = ObjectsInfo[numderObject][85]*256 + ObjectsInfo[numderObject][84];
-						objectBiasY = ObjectsInfo[numderObject][87]*256 + ObjectsInfo[numderObject][86];
+						int objectBiasX = 0;
+						objectBiasX = ObjectsInfo[numderObject][2];
+						objectBiasY = ObjectsInfo[numderObject][3];
 						dXY = TileArray[i][j][k*8+16] + TileArray[i][j][k*8+17]%16*4*64;
     					dY = dXY/64+(i-yCor - scrOffsetY)*64 + objectBiasY;
     					dX = dXY%64+(j-xCor - scrOffsetX)*64 + objectBiasX;
@@ -115,8 +110,8 @@ public class Editor_007 extends JFrame {
 						ObjectsAll [numbOfObjectsAll][7] = k;// Номер объекта на плитке
 						ObjectsAll [numbOfObjectsAll][8] = i - yCor;//Координата плитки
 						ObjectsAll [numbOfObjectsAll][9] = j - xCor;//Координата плитки
-						ObjectsAll [numbOfObjectsAll][10] = sizeOfObjects[numderObject][0];
-						ObjectsAll [numbOfObjectsAll][11] = sizeOfObjects[numderObject][1];
+						ObjectsAll [numbOfObjectsAll][10] = ObjectsInfo[numderObject][1];
+						ObjectsAll [numbOfObjectsAll][11] = ObjectsInfo[numderObject][0];
 						ObjectsAll [numbOfObjectsAll][12] = TileArray[i][j][6];//Всего объектов на плитке
 						numbOfObjectsAll ++;
 					}
@@ -380,6 +375,9 @@ public class Editor_007 extends JFrame {
 		JButton butPasteObj = new JButton("Paste object");
 		butPasteObj.setFocusable(false);
 		upPanel.add(butPasteObj);
+		JButton butTest = new JButton("Test");
+		butTest.setFocusable(false);
+		upPanel.add(butTest);
 		add(upPanel, BorderLayout.PAGE_START);
 		//-----------------Нижняя панель------------------------
 		JPanel downPanel = new JPanel();
@@ -561,6 +559,59 @@ public class Editor_007 extends JFrame {
 						countObjects++;
 						repaint();
 				}
+			}  
+		});
+		butTest.addActionListener(new ActionListener(){  
+			public void actionPerformed(ActionEvent e){
+				String[] objName = new String[7208];
+				int[][] objSize = new int[7208][7];
+				String b;
+				try {
+					byte[] buf = Files.readAllBytes(Paths.get("objects.de"));
+					int k = 0;
+					for (int i = 0; i < 7208; i++) {
+						objName[i] = "";
+						while (buf[k] != 9) {
+							char c = 0;
+							c += buf[k];
+							objName[i] += c;
+							k++;
+						}
+						k++;
+						
+						for (int j = 0; j < 6; j++) {
+							b = "";
+							while (buf[k] != 9) {
+								b += (char) (buf[k] & 0xFF);
+								k++;
+							}
+							k++;
+							objSize[i][j] = Integer.parseInt(b);
+						}
+						
+						b = "";
+						while (buf[k] != 13 ) {
+							b += (char) (buf[k] & 0xFF);
+							k++;
+						}
+						k++;
+						objSize[i][6] = Integer.parseInt(b);
+						
+						k++;
+						if (i > 7100) {
+						System.out.print(objName[i] + " ");
+						System.out.print(objSize[i][0] + " ");
+						System.out.print(objSize[i][1] + " ");
+						System.out.print(objSize[i][2] + " ");
+						System.out.print(objSize[i][3] + " ");
+						System.out.print(objSize[i][4] + " ");
+						System.out.print(objSize[i][5] + " ");
+						System.out.println(objSize[i][6]);
+						}
+					}
+					} catch (IOException z) {
+					z.printStackTrace();
+					}
 			}  
 		}); 
 		butTextures.addActionListener(new ActionListener(){  
@@ -980,65 +1031,34 @@ public class Editor_007 extends JFrame {
 		public void actionPerformed(ActionEvent e) {System.exit(0);}
 	}
 	
-	public static int[] getImageDimension(File imgFile) throws IOException {// Определяем размер изображения
-		int pos = imgFile.getName().lastIndexOf(".");
-		if (pos == -1)
-		throw new IOException("No extension for file: " + imgFile.getAbsolutePath());
-		String suffix = imgFile.getName().substring(pos + 1);
-		Iterator<ImageReader> iter = ImageIO.getImageReadersBySuffix(suffix);
-		while(iter.hasNext()) {
-			ImageReader reader = iter.next();
-		    try {
-		    	ImageInputStream stream = new FileImageInputStream(imgFile);
-		    	reader.setInput(stream);
-		    	int width = reader.getWidth(reader.getMinIndex());
-		    	int height = reader.getHeight(reader.getMinIndex());
-		    	return new int[] {height, width};
-		    } 
-		    catch (IOException e) {} 
-		    finally {
-		    	reader.dispose();
-		    }
-		}
-		throw new IOException("Not a known image file: " + imgFile.getAbsolutePath());
-	}
-	
 	public static void readConfig() {
 	    System.out.print("Читаем config...");
-	    int bufferSize = 0;
 	    int countNamb = 0;
 	    int a = 0;
 	    int buffer;
-		ArrayList<Integer> buf = new ArrayList<Integer>();
-	//-------------------------------------------------------------------------------------------		
-		// Читаем файл побайтно в массив buf
-		try (FileInputStream fin = new FileInputStream("config.ini")) {
-			int i = -1;
-			while ((i = fin.read()) != -1) {
-				buf.add(i);
-			}
-		} catch (IOException ex) {
-			System.out.println(ex.getMessage());
-		}
-		bufferSize = buf.size() - 1; // Размер масссива buf с нуля
-	//-------------------------------------------------------------------------------------------
-		while(a < bufferSize) {
-			while (buf.get(a) != 10 && a < bufferSize) {
-				a++;
-			}
-			a++;
-			if (buf.get(a) != 47) {
-				while (buf.get(a) != 13 && a < bufferSize) {
-					buffer = buf.get(a);
-					if (countNamb == 0) gameDirectory += (char)buffer;
-					if (countNamb == 1) saveName += (char)buffer;
-					if (countNamb == 2) fileExt += (char)buffer;
+		try {
+			byte[] iniBuf = Files.readAllBytes(Paths.get("config.ini"));
+			
+			while(a < iniBuf.length-1) {
+				while (iniBuf[a] != 10 && a < iniBuf.length-1) {
 					a++;
 				}
-				countNamb++;
 				a++;
+				if (iniBuf[a] != 47) {
+					while (iniBuf[a] != 13 && a < iniBuf.length-1) {
+						buffer = iniBuf[a];
+						if (countNamb == 0) gameDirectory += (char)buffer;
+						if (countNamb == 1) saveName += (char)buffer;
+						if (countNamb == 2) fileExt += (char)buffer;
+						a++;
+					}
+					countNamb++;
+					a++;
+				}
 			}
-		}
+		} catch (IOException z) {
+			z.printStackTrace();
+		  }
 		System.out.println("OK");
 	}
 	
@@ -1050,17 +1070,6 @@ public class Editor_007 extends JFrame {
 		inpFile = gameDirectory + "\\savegames\\" + saveName +"\\world." +fileExt;
 		outFile = gameDirectory + "\\savegames\\" + saveName +"\\world." +fileExt;
 		ObjFile = gameDirectory + "\\savegames\\" + saveName +"\\objects." + fileExt;
-		inpObjFile = gameDirectory + "\\static\\objects.000";
-		for(int i = 0; i < countObjectsInFolder; i++) {
-			String objectName = Integer.toString(i);
-			if (objectName.length() < 4) objectName = "0"+objectName;
-			if (objectName.length() < 4) objectName = "0"+objectName;
-			if (objectName.length() < 4) objectName = "0"+objectName;
-			File dir1 = new File("objects//00"+objectName+".png");
-			int[] ints = getImageDimension(dir1);
-			sizeOfObjects[i][0] = ints[0];
-			sizeOfObjects[i][1] = ints[1];
-		}
 		ObjectsName = ReadObjectsInfo.readObjectsName(inpObjFile);
 		Editor_007 mainFrame = new Editor_007();
 		mainFrame.setFocusable(true);
