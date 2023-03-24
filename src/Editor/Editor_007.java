@@ -38,8 +38,8 @@ public class Editor_007 extends JFrame {
 	public static int countObjectsInFolder = 7208;
 	public static int centerPanelSizeX = 700;
 	public static int centerPanelSizeY = 700;
-	public static int yCor = 60;// Координата нулевой плитки
-	public static int xCor = 85;// Координата нулевой плитки
+	public static int yCor = 909;// Координата нулевой плитки
+	public static int xCor = 148;// Координата нулевой плитки
 	public static int scrOffsetY = 6;//Смещение экрана по Y
 	public static int scrOffsetX = 4;//Смещение экрана по X
 	public static int dXY = 0;// Положение объекта
@@ -131,6 +131,7 @@ public class Editor_007 extends JFrame {
 						if (k == selectedObject) infoText += "======="+(k+1)+"=======" + "\n";
 						else infoText += "-----------"+(k+1)+"-----------" + "\n";
                 		infoText += ObjectsName[TileArray[i][j][k*8+22]*64 + TileArray[i][j][k*8+21]/4] + "\n";
+                		infoText += TileArray[i][j][k*8+22]*64 + TileArray[i][j][k*8+21]/4 + "\n";
 						dXY = TileArray[i][j][k*8+16] + TileArray[i][j][k*8+17]%16*4*64;
 						dY = dXY/64;
 						dX = dXY%64;
@@ -364,9 +365,12 @@ public class Editor_007 extends JFrame {
 		butWrite.setFocusable(false);
 		butWrite.setEnabled(false);
 		upPanel.add(butWrite);
-		JButton editHEX = new JButton("Edit HEX");
-		editHEX.setFocusable(false);
-		upPanel.add(editHEX);
+		JButton editHexWorld = new JButton("Edit HEX World");
+		editHexWorld.setFocusable(false);
+		upPanel.add(editHexWorld);
+		JButton editHexObj = new JButton("Edit HEX Object");
+		editHexObj.setFocusable(false);
+		upPanel.add(editHexObj);
 		JButton delObjects = new JButton("Delete object");
 		delObjects.setFocusable(false);
 		upPanel.add(delObjects);
@@ -413,8 +417,8 @@ public class Editor_007 extends JFrame {
 				System.out.println("Completed");
 			}  
 		}); 
-		editHEX.addActionListener(new ActionListener(){  
-			public void actionPerformed(ActionEvent e){  
+		editHexWorld.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
 				if(selectedObject >= 0){ // Редактировать hex объекта
 					int numObj = TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+17]/16 + TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+18]*16 + TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+19]*4096;
 					consoleArea.setText(consoleArea.getText() + "\n" + "Edit HEX object " + numObj + " " + ObjectsName[TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+22]*64 + TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+21]/4]);
@@ -437,6 +441,37 @@ public class Editor_007 extends JFrame {
                 			String[] words = newDateTile.split(" ");
                 			for(String word : words){
                 				TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+16+r] = Integer.parseInt(word, 16);
+                				consoleArea.setText(consoleArea.getText() + word + " ");
+                				r++;
+                			}
+                		}
+                	}
+                	infoArea.setText("");
+                	infoArea.append(infoText);
+                	repaint();
+				}  
+			}
+		});
+		editHexObj.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				if(selectedObject >= 0){ // Редактировать hex объекта
+					int numObj = TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+17]/16 + TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+18]*16 + TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+19]*4096;
+					consoleArea.setText(consoleArea.getText() + "\n" + "Edit HEX object " + numObj + " " + ObjectsName[TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+22]*64 + TileArray[yCor+scrOffsetY+centerPanelSizeY/64/2][xCor+scrOffsetX+centerPanelSizeX/64/2][selectedObject*8+21]/4]);
+					String DateTile = "";
+					for (int i = 0; i < 27; i++) {
+						DateTile += Integer.toHexString(Objects[numObj][i]) + " ";
+					}
+					DateTile += Integer.toHexString(Objects[numObj][27]);
+                	String newDateTile = DateTile;
+                	consoleArea.setText(consoleArea.getText() + "\n" + "Old " + DateTile);
+                	newDateTile = JOptionPane.showInputDialog("Новое HEX значение объекта",newDateTile);
+                	if (!DateTile.equals(newDateTile)){
+                		if(newDateTile != null && newDateTile.length() < 84 && newDateTile.length() > 55) {
+                			consoleArea.setText(consoleArea.getText() + "\n" + "New ");
+                			int r = 0;
+                			String[] words = newDateTile.split(" ");
+                			for(String word : words){
+                				Objects[numObj][r] = Integer.parseInt(word, 16);
                 				consoleArea.setText(consoleArea.getText() + word + " ");
                 				r++;
                 			}
